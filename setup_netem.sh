@@ -5,6 +5,8 @@
 BRIDGE=$(docker network ls | grep edge | awk '{print $1}')
 IFACE="br-${BRIDGE}"
 
+echo "Interface: $IFACE"
+
 case "$1" in
   none)
     echo "Removing network impairment..."
@@ -21,7 +23,7 @@ case "$1" in
     ;;
 
   jitter)
-    echo "Setting jittered delay: 150ms ±20ms + 5% packet loss..."
+    echo "Setting jittered delay: 150ms +/-20ms + 5% packet loss..."
     tc qdisc del dev "$IFACE" root 2>/dev/null || true
     tc qdisc add dev "$IFACE" root netem delay 150ms 20ms loss 5%
     tc qdisc show dev "$IFACE"
@@ -32,7 +34,7 @@ case "$1" in
     echo "Usage: $0 [none|fixed|jitter]"
     echo "  none   — remove all impairment"
     echo "  fixed  — 150ms fixed delay + 5% loss (Groups C, E)"
-    echo "  jitter — 150ms ±20ms delay + 5% loss (Group F)"
+    echo "  jitter — 150ms +/-20ms delay + 5% loss (Group F)"
     exit 1
     ;;
 esac

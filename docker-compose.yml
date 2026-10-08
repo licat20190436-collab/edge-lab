@@ -1,34 +1,32 @@
-version: '3.8'
-
 services:
   nginx:
-    image: nginx:1.27
+    image: nginx:1.27-alpine
+    container_name: edge_nginx
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - fastapi
     mem_limit: 48m
     restart: unless-stopped
 
   fastapi:
-    image: tiangolo/uvicorn-gunicorn-fastapi:python3.11
-    volumes:
-      - ./app:/app
+    build: ./app
+    container_name: edge_fastapi
     environment:
-      - MODULE_NAME=main
-      - VARIABLE_NAME=app
-      - WEB_CONCURRENCY=1
-      - WORKERS_PER_CORE=1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_TTL=30
     depends_on:
       - redis
     mem_limit: 128m
     restart: unless-stopped
 
   redis:
-    image: redis:7
-    command: redis-server --maxmemory 90mb --maxmemory-policy allkeys-lru
+    image: redis:7-alpine
+    container_name: edge_redis
+    command: redis-server --maxmemory 80mb --maxmemory-policy allkeys-lru
     mem_limit: 80m
     restart: unless-stopped
 
